@@ -12,7 +12,7 @@ export class User extends Model {
 
   @Prop({ isRequired: true })
   @Exclude()
-  password: string;
+  password?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

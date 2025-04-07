@@ -5,6 +5,7 @@ import { User } from 'src/schemas/user.schema';
 import {
   IAuthService,
   IParamsComparePassword,
+  IPramsJwtSign,
   IPramsValidateUser,
 } from './types';
 import { CreateUserDto } from './dto';
@@ -26,7 +27,7 @@ export class AuthService implements IAuthService {
     private jwtService: JwtService,
   ) {}
 
-  async createUser(user: CreateUserDto): Promise<User> {
+  async createUser(user: CreateUserDto): Promise<{ token: string }> {
     const emailExisted = await this.userModel.findOne({ email: user.email });
 
     if (emailExisted)
@@ -41,22 +42,35 @@ export class AuthService implements IAuthService {
 
     const createdUser = new this.userModel(user);
 
-    return createdUser.save();
+    createdUser.save();
+
+    return this.signJwt({
+      email: createdUser.email,
+      _id: String(createdUser._id),
+    });
   }
 
   async login(user: User) {
+    return this.signJwt({ email: user.email, _id: user._id });
+  }
+
+  async signJwt(user: IPramsJwtSign) {
     const payload = { email: user.email, id: user._id };
+
     return {
-      accessToken: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
     };
   }
 
   async validateUser(params: IPramsValidateUser) {
     const { email, password } = params;
 
-    const user = await this.userService.findUser({
-      email,
-    });
+    const user = await this.userService.findUser(
+      {
+        email,
+      },
+      true,
+    );
 
     const isValidPass = await this.comparePassword({
       rawPassWord: password,
