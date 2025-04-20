@@ -9,7 +9,7 @@ import {
   IPramsValidateUser,
 } from './types';
 import { CreateUserDto } from './dto';
-import { hashPassword } from 'src/utils';
+import { hashPassword, SERVICES } from 'src/utils';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/user/user.service';
 import { IUserService } from 'src/user/types';
@@ -21,7 +21,7 @@ export class AuthService implements IAuthService {
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
 
-    @Inject(UserService)
+    @Inject(SERVICES.USERS)
     private readonly userService: IUserService,
 
     private jwtService: JwtService,

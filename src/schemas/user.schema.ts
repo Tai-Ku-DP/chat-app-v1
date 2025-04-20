@@ -2,17 +2,19 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Exclude } from 'class-transformer';
 import { Model } from 'mongoose';
 
-@Schema()
+@Schema({ versionKey: false })
 export class User extends Model {
-  @Prop({ isRequired: true })
+  @Prop({ required: true })
   email: string;
 
-  @Prop({ isRequired: true })
+  @Prop({ required: true })
   fullName: string;
 
-  @Prop({ isRequired: true })
+  @Prop({ required: true })
   @Exclude()
   password?: string;
 }
+
+export type IUser = User & { _id: string };
 
 export const UserSchema = SchemaFactory.createForClass(User);

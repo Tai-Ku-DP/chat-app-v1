@@ -12,7 +12,7 @@ export class UserService implements IUserService {
   ) {}
 
   async findUser(query: FilterQuery<User>, pickPass = false) {
-    const user = await this.userModel.findOne(query, { __v: 0 });
+    const user = await this.userModel.findOne(query);
 
     if (!user) throw new HttpException('User Not Found', HttpStatus.NOT_FOUND);
 
@@ -20,6 +20,7 @@ export class UserService implements IUserService {
       return user;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...responseUser } = user._doc;
     return responseUser as User;
   }

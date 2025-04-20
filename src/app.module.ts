@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { FriendRequestModule } from './friend-request/friend-request.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { UserModule } from './user/user.module';
     MongooseModule.forRoot(process.env.MONGO_URI),
     AuthModule,
     UserModule,
+    FriendRequestModule,
   ],
 })
 export class AppModule {}
