@@ -1,10 +1,12 @@
 export enum ROUTES {
   AUTH = 'auth',
   FRIEND_REQUEST = 'friend-request',
+  FRIEND_SHIP = 'friendship',
 }
 
 export enum SERVICES {
   AUTH = 'AUTH_SERVICE',
   USERS = 'USERS_SERVICE',
   FRIENDS_REQUESTS_SERVICE = 'FRIEND_REQUEST_SERVICE',
+  FRIEND_SHIP_SERVICE = 'FRIEND_SHIP_SERVICE',
 }

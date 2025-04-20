@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Inject,
+  Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -38,5 +40,14 @@ export class FriendRequestController {
     @Query('status') status: StatusFriendRequest,
   ) {
     return this.friendRequestService.getRequestFriend(user, status);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  acceptRequestFriend(
+    @UserCtx() user: User,
+    @Param('id') friendRequestId: string,
+  ) {
+    return this.friendRequestService.acceptRequestFriend(user, friendRequestId);
   }
 }

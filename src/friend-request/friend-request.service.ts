@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isObjectIdOrHexString, Model, Types } from 'mongoose';
+import { FilterQuery, isObjectIdOrHexString, Model, Types } from 'mongoose';
 import {
   FriendRequest,
   StatusFriendRequest,
@@ -8,7 +8,9 @@ import {
 import { IFriendRequestServices } from './types';
 import { IUser } from 'src/schemas/user.schema';
 import { IUserService } from 'src/user/types';
-import { SERVICES } from 'src/utils';
+import { SERVICES, validateMongoId } from 'src/utils';
+import { FriendShip } from 'src/schemas/friendship-schema';
+import { IFriendShipServices } from 'src/friend-ship/types';
 
 @Injectable()
 export class FriendRequestService implements IFriendRequestServices {
@@ -17,7 +19,16 @@ export class FriendRequestService implements IFriendRequestServices {
     private readonly friendRequestModel: Model<FriendRequest>,
 
     @Inject(SERVICES.USERS) private readonly userService: IUserService,
+
+    @Inject(SERVICES.FRIEND_SHIP_SERVICE)
+    private readonly friendShipServices: IFriendShipServices,
   ) {}
+
+  async findRequestFriend(
+    query: FilterQuery<FriendShip>,
+  ): Promise<FriendRequest> {
+    return this.friendRequestModel.findOne(query);
+  }
 
   async createRequestFriend(
     user: IUser,
@@ -72,12 +83,48 @@ export class FriendRequestService implements IFriendRequestServices {
   ): Promise<FriendRequest[]> {
     const fr = await this.friendRequestModel
       .find({
-        sender: user._id,
+        $or: [
+          {
+            sender: user._id,
+          },
+          {
+            receiver: user._id,
+          },
+        ],
         status: status ?? StatusFriendRequest.PENDING,
       })
-      .populate('receiver')
+      .populate('sender receiver')
       .lean();
 
     return fr;
+  }
+
+  async acceptRequestFriend(
+    user: IUser,
+    requestFriendId: string,
+  ): Promise<any> {
+    const validateId = validateMongoId(requestFriendId);
+
+    if (!validateId) return;
+
+    const friendRequest = await this.friendRequestModel.findByIdAndUpdate(
+      requestFriendId,
+      {
+        status: StatusFriendRequest.ACCEPTED,
+      },
+    );
+
+    if (!friendRequest)
+      throw new HttpException(
+        'Friend Request Not Existed',
+        HttpStatus.FORBIDDEN,
+      );
+
+    const friend = await this.friendShipServices.createFriendShip({
+      userId: user._id,
+      friendRequest,
+    });
+
+    return friend;
   }
 }

@@ -8,6 +8,7 @@ import {
   FriendRequestSchema,
 } from 'src/schemas/friend-request-schema';
 import { UserModule } from 'src/user/user.module';
+import { FriendShipModule } from 'src/friend-ship/friend-ship.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UserModule } from 'src/user/user.module';
       { name: FriendRequest.name, schema: FriendRequestSchema },
     ]),
     UserModule,
+    FriendShipModule,
   ],
   controllers: [FriendRequestController],
   providers: [
@@ -23,7 +25,6 @@ import { UserModule } from 'src/user/user.module';
       useClass: FriendRequestService,
     },
   ],
-
   exports: [
     {
       provide: SERVICES.FRIENDS_REQUESTS_SERVICE,
