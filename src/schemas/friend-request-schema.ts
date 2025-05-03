@@ -22,6 +22,12 @@ export class FriendRequest extends Document {
 
   @Prop({ default: Date.now })
   createdAt: Date;
+
+  @Prop({ type: Date })
+  acceptedAt?: Date;
+
+  @Prop({ type: Date })
+  rejectedAt?: Date;
 }
 
 export const FriendRequestSchema = SchemaFactory.createForClass(FriendRequest);

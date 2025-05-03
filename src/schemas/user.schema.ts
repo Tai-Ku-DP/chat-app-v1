@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 
 @Schema({ versionKey: false })
 export class User extends Model {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true, index: true })
   email: string;
 
   @Prop({ required: true })

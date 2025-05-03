@@ -31,4 +31,9 @@ export class AuthController {
   async login(@Request() req: AnyObject) {
     return this.authService.login(req?.user);
   }
+
+  @Get('login')
+  async get() {
+    return 'ping';
+  }
 }

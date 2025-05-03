@@ -111,6 +111,7 @@ export class FriendRequestService implements IFriendRequestServices {
       requestFriendId,
       {
         status: StatusFriendRequest.ACCEPTED,
+        acceptedAt: Date.now().toString(),
       },
     );
 
