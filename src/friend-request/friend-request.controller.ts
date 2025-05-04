@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
@@ -49,5 +50,14 @@ export class FriendRequestController {
     @Param('id') friendRequestId: string,
   ) {
     return this.friendRequestService.acceptRequestFriend(user, friendRequestId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  cancelRequestFriend(
+    @UserCtx() user: User,
+    @Param('id') friendRequestId: string,
+  ) {
+    return this.friendRequestService.cancelRequestFriend(user, friendRequestId);
   }
 }

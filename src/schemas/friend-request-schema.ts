@@ -7,6 +7,7 @@ export enum StatusFriendRequest {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
+  EMPTY_STRING = '',
 }
 
 @Schema({ versionKey: false })
@@ -17,7 +18,7 @@ export class FriendRequest extends Document {
   @Prop({ type: Types.ObjectId, ref: () => User, required: true })
   receiver: Types.ObjectId;
 
-  @Prop({ required: true, default: StatusFriendRequest.PENDING })
+  @Prop({ required: true, default: StatusFriendRequest.EMPTY_STRING })
   status: StatusFriendRequest;
 
   @Prop({ default: Date.now })

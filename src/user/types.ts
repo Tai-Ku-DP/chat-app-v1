@@ -12,6 +12,11 @@ export interface IUserService {
   ): Promise<UserWithFriendStatus[]>;
 }
 
+export interface IFriendStatus {
+  status: StatusFriendRequest;
+  requestId?: string;
+  isSender?: boolean;
+}
 export interface UserWithFriendStatus {
   user: User;
   friendStatus?: {

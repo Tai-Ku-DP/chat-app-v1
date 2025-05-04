@@ -7,7 +7,7 @@ import {
 } from 'src/schemas/friend-request-schema';
 import { IFriendRequestServices } from './types';
 import { IUser } from 'src/schemas/user.schema';
-import { IUserService } from 'src/user/types';
+import { IFriendStatus, IUserService } from 'src/user/types';
 import { SERVICES, validateMongoId } from 'src/utils';
 import { FriendShip } from 'src/schemas/friendship-schema';
 import { IFriendShipServices } from 'src/friend-ship/types';
@@ -33,7 +33,7 @@ export class FriendRequestService implements IFriendRequestServices {
   async createRequestFriend(
     user: IUser,
     _receiverId: string,
-  ): Promise<FriendRequest> {
+  ): Promise<IFriendStatus> {
     if (!isObjectIdOrHexString(_receiverId)) {
       throw new HttpException('Invalid receiverId', HttpStatus.BAD_REQUEST);
     }
@@ -68,13 +68,19 @@ export class FriendRequestService implements IFriendRequestServices {
     if (existed)
       throw new HttpException('Friend Request existed', HttpStatus.CONFLICT);
 
-    const createUser = new this.friendRequestModel({
+    const createFriendRequest = new this.friendRequestModel({
       sender: userId,
       receiver: receiverId,
       status: StatusFriendRequest.PENDING,
     });
 
-    return createUser.save();
+    await createFriendRequest.save();
+
+    return {
+      isSender: userId === createFriendRequest.sender,
+      requestId: createFriendRequest?._id as string,
+      status: createFriendRequest.status,
+    };
   }
 
   async getRequestFriend(
@@ -102,7 +108,7 @@ export class FriendRequestService implements IFriendRequestServices {
   async acceptRequestFriend(
     user: IUser,
     requestFriendId: string,
-  ): Promise<any> {
+  ): Promise<boolean> {
     const validateId = validateMongoId(requestFriendId);
 
     if (!validateId) return;
@@ -113,6 +119,9 @@ export class FriendRequestService implements IFriendRequestServices {
         status: StatusFriendRequest.ACCEPTED,
         acceptedAt: Date.now().toString(),
       },
+      {
+        new: true,
+      },
     );
 
     if (!friendRequest)
@@ -121,11 +130,40 @@ export class FriendRequestService implements IFriendRequestServices {
         HttpStatus.FORBIDDEN,
       );
 
-    const friend = await this.friendShipServices.createFriendShip({
+    await this.friendShipServices.createFriendShip({
       userId: user._id,
       friendRequest,
     });
 
-    return friend;
+    return !!friendRequest;
+  }
+
+  async cancelRequestFriend(
+    user: IUser,
+    requestFriendId: string,
+  ): Promise<IFriendStatus> {
+    const validateId = validateMongoId(requestFriendId);
+
+    if (!validateId) return;
+
+    const friendRequest = await this.findRequestFriend({
+      _id: requestFriendId,
+    });
+
+    if (!friendRequest)
+      throw new HttpException(
+        'Friend Request Not Existed',
+        HttpStatus.FORBIDDEN,
+      );
+
+    await this.friendRequestModel.deleteOne({
+      _id: friendRequest._id,
+    });
+
+    return {
+      requestId: '',
+      status: StatusFriendRequest.EMPTY_STRING,
+      isSender: false,
+    };
   }
 }
