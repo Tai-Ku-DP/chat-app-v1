@@ -4,5 +4,7 @@ declare namespace NodeJS {
     MONGO_URI: string;
     PORT: string;
     JWT_SECRET: string;
+    REDIS_HOST: string;
+    REDIS_PORT: string;
   }
 }

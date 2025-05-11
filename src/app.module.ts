@@ -5,6 +5,9 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { FriendRequestModule } from './friend-request/friend-request.module';
 import { FriendShipModule } from './friend-ship/friend-ship.module';
+import { RedisService } from './redis/redis.service';
+import { RedisModule } from './redis/redis.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { FriendShipModule } from './friend-ship/friend-ship.module';
     UserModule,
     FriendRequestModule,
     FriendShipModule,
+    RedisModule,
+    GatewayModule,
   ],
+  providers: [RedisService],
 })
 export class AppModule {}
