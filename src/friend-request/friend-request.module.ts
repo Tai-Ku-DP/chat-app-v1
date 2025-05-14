@@ -9,6 +9,7 @@ import {
 } from 'src/schemas/friend-request-schema';
 import { UserModule } from 'src/user/user.module';
 import { FriendShipModule } from 'src/friend-ship/friend-ship.module';
+import { FriendRequestGateway } from './friend-request.gateway';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { FriendShipModule } from 'src/friend-ship/friend-ship.module';
   ],
   controllers: [FriendRequestController],
   providers: [
+    FriendRequestGateway,
     {
       provide: SERVICES.FRIENDS_REQUESTS_SERVICE,
       useClass: FriendRequestService,

@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { SocketAdapter } from './adapter/socket-adapter';
+import { SocketAdapter } from './adapter/socket/socket-adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

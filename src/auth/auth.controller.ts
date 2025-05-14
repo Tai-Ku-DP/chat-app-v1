@@ -11,9 +11,8 @@ import { ROUTES } from 'src/utils';
 import { CreateUserDto } from './dto';
 import { AuthService } from './auth.service';
 import { IAuthService } from './types';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { AnyObject } from 'mongoose';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller(ROUTES.AUTH)
 export class AuthController {

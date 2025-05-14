@@ -7,7 +7,7 @@ import { FriendRequestModule } from './friend-request/friend-request.module';
 import { FriendShipModule } from './friend-ship/friend-ship.module';
 import { RedisService } from './redis/redis.service';
 import { RedisModule } from './redis/redis.module';
-import { GatewayModule } from './gateway/gateway.module';
+import { SocketAdapterModule } from './adapter/socket/socket-adapter.module';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { GatewayModule } from './gateway/gateway.module';
     FriendRequestModule,
     FriendShipModule,
     RedisModule,
-    GatewayModule,
+    SocketAdapterModule,
   ],
   providers: [RedisService],
 })

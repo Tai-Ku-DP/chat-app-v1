@@ -6,7 +6,9 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
+import { SERVICES } from 'src/utils';
+import { RedisService } from 'src/redis/redis.service';
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -31,6 +33,10 @@ interface AuthenticatedSocket extends Socket {
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
+  constructor(
+    @Inject(SERVICES.REDIS_SERVICE) private readonly redisService: RedisService,
+  ) {}
+
   @WebSocketServer() server: Server;
   private readonly SOCKET_TTL = 60 * 60; // 1 hour in seconds
 
