@@ -11,3 +11,8 @@ export enum SERVICES {
   FRIEND_SHIP_SERVICE = 'FRIEND_SHIP_SERVICE',
   REDIS_SERVICE = 'REDIS_SERVICE',
 }
+
+export enum PREFIX_REDIS {
+  TOKEN = 'token',
+  SOCKET = 'socket',
+}

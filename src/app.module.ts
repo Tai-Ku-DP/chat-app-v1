@@ -8,6 +8,7 @@ import { FriendShipModule } from './friend-ship/friend-ship.module';
 import { RedisService } from './redis/redis.service';
 import { RedisModule } from './redis/redis.module';
 import { SocketAdapterModule } from './adapter/socket/socket-adapter.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SocketAdapterModule } from './adapter/socket/socket-adapter.module';
     FriendShipModule,
     RedisModule,
     SocketAdapterModule,
+    EventEmitterModule.forRoot(),
   ],
   providers: [RedisService],
 })

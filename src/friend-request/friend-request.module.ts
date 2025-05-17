@@ -10,6 +10,8 @@ import {
 import { UserModule } from 'src/user/user.module';
 import { FriendShipModule } from 'src/friend-ship/friend-ship.module';
 import { FriendRequestGateway } from './friend-request.gateway';
+import { RedisModule } from 'src/redis/redis.module';
+import { RedisService } from 'src/redis/redis.service';
 
 @Module({
   imports: [
@@ -18,6 +20,7 @@ import { FriendRequestGateway } from './friend-request.gateway';
     ]),
     UserModule,
     FriendShipModule,
+    RedisModule,
   ],
   controllers: [FriendRequestController],
   providers: [
@@ -25,6 +28,10 @@ import { FriendRequestGateway } from './friend-request.gateway';
     {
       provide: SERVICES.FRIENDS_REQUESTS_SERVICE,
       useClass: FriendRequestService,
+    },
+    {
+      provide: SERVICES.REDIS_SERVICE,
+      useClass: RedisService,
     },
   ],
   exports: [

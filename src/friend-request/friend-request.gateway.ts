@@ -4,10 +4,18 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { IUser } from 'src/schemas/user.schema';
+import { IFriendStatus } from 'src/user/types';
+import { OnEvent } from '@nestjs/event-emitter';
+import { PREFIX_REDIS, SERVICES } from 'src/utils';
+import { RedisService } from 'src/redis/redis.service';
+import { EVENTS_FRIEND_REQUEST, SOCKET_FRIEND_REQUEST } from './constans';
 interface AuthenticatedSocket extends Socket {
   data: {
     user: IUser;
@@ -31,6 +39,10 @@ export class FriendRequestGateway
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(FriendRequestGateway.name);
 
+  constructor(
+    @Inject(SERVICES.REDIS_SERVICE) private readonly redisService: RedisService,
+  ) {}
+
   afterInit() {
     this.logger.log('Friend Request Gateway initialized');
   }
@@ -48,6 +60,8 @@ export class FriendRequestGateway
         socketId: client.id,
         userId: userId,
       });
+
+      // await this.redisService.set(`${PREFIX_REDIS.SOCKET}:${userId}`, userId);
     } catch (error) {
       this.logger.error(`Connection error: ${error.message}`);
       client.disconnect();
@@ -70,41 +84,27 @@ export class FriendRequestGateway
     }
   }
 
-  // @SubscribeMessage('sendFriendRequest')
-  // async handleSendFriendRequest(
-  //   @ConnectedSocket() client: AuthenticatedSocket,
-  //   @MessageBody() data: { receiverId: string },
-  // ) {
-  //   try {
-  //     const senderId = client.data.user.id;
-  //     const receiverId = data.receiverId;
+  @OnEvent(EVENTS_FRIEND_REQUEST.SEND_FRIEND_REQUEST)
+  async handleSendFriendRequest(body: IFriendStatus) {
+    try {
+      const receiverId = body.receiverId;
 
-  //     // Store friend request in Redis
-  //     const requestKey = `friend_request:${senderId}:${receiverId}`;
-  //     await this.redisService.set(requestKey, {
-  //       senderId,
-  //       receiverId,
-  //       status: 'pending',
-  //       timestamp: Date.now(),
-  //     });
+      // Get receiver's socket ID from Redis
+      const receiverSocketId = await this.redisService.get<string>(
+        `${PREFIX_REDIS.SOCKET}:${receiverId}`,
+      );
 
-  //     // Get receiver's socket ID from Redis
-  //     const receiverSocketId = await this.redisService.get<string>(
-  //       `socket:${receiverId}`,
-  //     );
-  //     if (receiverSocketId) {
-  //       this.server.to(receiverSocketId).emit('newFriendRequest', {
-  //         senderId,
-  //         timestamp: Date.now(),
-  //       });
-  //     }
-
-  //     return { status: 'success', message: 'Friend request sent' };
-  //   } catch (error) {
-  //     this.logger.error(`Error sending friend request: ${error.message}`);
-  //     return { status: 'error', message: 'Failed to send friend request' };
-  //   }
-  // }
+      if (receiverSocketId) {
+        this.server
+          .to(receiverSocketId)
+          .emit(SOCKET_FRIEND_REQUEST.NEW_FRIEND_REQUEST, {
+            ...body,
+          });
+      }
+    } catch (error) {
+      this.logger.error(`Error sending friend request: ${error.message}`);
+    }
+  }
 
   // @SubscribeMessage('acceptFriendRequest')
   // async handleAcceptFriendRequest(

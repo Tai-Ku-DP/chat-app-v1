@@ -11,6 +11,8 @@ import { IFriendStatus, IUserService } from 'src/user/types';
 import { SERVICES, validateMongoId } from 'src/utils';
 import { FriendShip } from 'src/schemas/friendship-schema';
 import { IFriendShipServices } from 'src/friend-ship/types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EVENTS_FRIEND_REQUEST } from './constans';
 
 @Injectable()
 export class FriendRequestService implements IFriendRequestServices {
@@ -22,6 +24,8 @@ export class FriendRequestService implements IFriendRequestServices {
 
     @Inject(SERVICES.FRIEND_SHIP_SERVICE)
     private readonly friendShipServices: IFriendShipServices,
+
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async findRequestFriend(
@@ -76,10 +80,19 @@ export class FriendRequestService implements IFriendRequestServices {
 
     await createFriendRequest.save();
 
+    const payloadCommon = {
+      requestId: createFriendRequest._id as string,
+      status: createFriendRequest.status,
+    };
+
+    this.eventEmitter.emit(EVENTS_FRIEND_REQUEST.SEND_FRIEND_REQUEST, {
+      receiverId,
+      ...payloadCommon,
+    });
+
     return {
       isSender: userId === createFriendRequest.sender,
-      requestId: createFriendRequest?._id as string,
-      status: createFriendRequest.status,
+      ...payloadCommon,
     };
   }
 

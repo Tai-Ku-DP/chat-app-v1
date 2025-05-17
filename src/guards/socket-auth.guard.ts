@@ -7,6 +7,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
 import { RedisService } from 'src/redis/redis.service';
+import { IUser } from 'src/schemas/user.schema';
+import { PREFIX_REDIS } from 'src/utils';
 
 @Injectable()
 export class SocketAuthGuard implements CanActivate {
@@ -21,44 +23,68 @@ export class SocketAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client: Socket = context.switchToWs().getClient();
+    const token = this.extractTokenFromHandshake(client);
 
-    const token = this.extractTokenFromHeader(client);
-
-    if (token === 'undefined') {
-      this.logger.log(
-        'Token extractTokenFromHeader undefined in SocketAuthGuard',
-      );
+    if (!token) {
+      this.logger.warn('No JWT token provided, disconnecting socket');
       return false;
     }
 
-    const cacheUser = await this.redisService.get(`token:${token}`);
+    // Cố gắng lấy user từ cache Redis
+    const cacheUser: IUser = await this.redisService.get(
+      `${PREFIX_REDIS.TOKEN}:${token}`,
+    );
 
     if (cacheUser) {
       client.data.user = cacheUser;
+
+      await this.redisService.set(
+        `${PREFIX_REDIS.SOCKET}:${cacheUser.id}`,
+        cacheUser.id,
+      );
+
       return true;
     }
 
-    const user = await this.jwtService.verifyAsync(token, {
-      secret: process.env.JWT_SECRET,
-    });
-
-    if (!user) {
-      this.logger.error('Invalid User in SocketAuthGuard');
+    // Verify JWT
+    let user: IUser;
+    try {
+      user = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET,
+      });
+    } catch (err) {
       return false;
     }
 
+    // Lưu vào cache để lần sau không phải verify lại
     await this.redisService.set(`token:${token}`, user, this.ttlCache);
 
-    client.data.user = user;
+    await this.redisService.set(`${PREFIX_REDIS.SOCKET}:${user.id}`, user.id);
 
+    client.data.user = user;
     return true;
   }
 
-  private extractTokenFromHeader(client: Socket): string | undefined {
+  private extractTokenFromHandshake(client: Socket): string | null {
+    // 1. Ưu tiên lấy từ handshake.auth (phổ biến khi dùng Socket.IO >= v3)
+    const authToken = (client.handshake.auth &&
+      client.handshake.auth.token) as string;
+
+    if (authToken) {
+      this.logger.log(`Token from handshake.auth: ${authToken}`);
+      return authToken;
+    }
+
+    // 2. Fallback: lấy từ header Authorization
     const bearer = client.handshake.headers.authorization as string;
-    if (!bearer) return undefined;
+    if (!bearer) return null;
 
     const [type, token] = bearer.split(' ');
-    return type === 'Bearer' ? token : null;
+    if (type !== 'Bearer' || !token) {
+      this.logger.warn(`Invalid authorization header: ${bearer}`);
+      return null;
+    }
+
+    return token;
   }
 }

@@ -16,6 +16,7 @@ export interface IFriendStatus {
   status: StatusFriendRequest;
   requestId?: string;
   isSender?: boolean;
+  receiverId?: string;
 }
 export interface UserWithFriendStatus {
   user: User;
