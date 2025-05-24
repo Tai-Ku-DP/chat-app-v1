@@ -6,9 +6,10 @@ import { UserModule } from './user/user.module';
 import { FriendRequestModule } from './friend-request/friend-request.module';
 import { FriendShipModule } from './friend-ship/friend-ship.module';
 import { RedisService } from './redis/redis.service';
-import { RedisModule } from './redis/redis.module';
+
 import { SocketAdapterModule } from './adapter/socket/socket-adapter.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SERVICES } from './utils';
 
 @Module({
   imports: [
@@ -20,10 +21,20 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     UserModule,
     FriendRequestModule,
     FriendShipModule,
-    RedisModule,
     SocketAdapterModule,
     EventEmitterModule.forRoot(),
   ],
-  providers: [RedisService],
+  providers: [
+    {
+      provide: SERVICES.REDIS_SERVICE,
+      useClass: RedisService,
+    },
+  ],
+  exports: [
+    {
+      provide: SERVICES.REDIS_SERVICE,
+      useClass: RedisService,
+    },
+  ],
 })
 export class AppModule {}

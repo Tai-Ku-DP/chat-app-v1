@@ -6,13 +6,13 @@ import { SERVICES } from 'src/utils';
   providers: [
     {
       provide: SERVICES.REDIS_SERVICE,
-      useValue: RedisService,
+      useClass: RedisService,
     },
   ],
   exports: [
     {
       provide: SERVICES.REDIS_SERVICE,
-      useValue: RedisService,
+      useClass: RedisService,
     },
   ],
 })

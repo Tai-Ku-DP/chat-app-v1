@@ -61,7 +61,7 @@ export class FriendRequestGateway
         userId: userId,
       });
 
-      // await this.redisService.set(`${PREFIX_REDIS.SOCKET}:${userId}`, userId);
+      await this.redisService.set(`${PREFIX_REDIS.SOCKET}:${userId}`, userId);
     } catch (error) {
       this.logger.error(`Connection error: ${error.message}`);
       client.disconnect();

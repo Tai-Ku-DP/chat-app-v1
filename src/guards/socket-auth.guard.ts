@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   Logger,
 } from '@nestjs/common';
@@ -8,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
 import { RedisService } from 'src/redis/redis.service';
 import { IUser } from 'src/schemas/user.schema';
-import { PREFIX_REDIS } from 'src/utils';
+import { PREFIX_REDIS, SERVICES } from 'src/utils';
 
 @Injectable()
 export class SocketAuthGuard implements CanActivate {
@@ -17,8 +18,7 @@ export class SocketAuthGuard implements CanActivate {
 
   constructor(
     private readonly jwtService: JwtService,
-    private readonly redisService: RedisService,
-    // private readonly redisService: RedisService,
+    @Inject(SERVICES.REDIS_SERVICE) private readonly redisService: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -38,11 +38,6 @@ export class SocketAuthGuard implements CanActivate {
     if (cacheUser) {
       client.data.user = cacheUser;
 
-      await this.redisService.set(
-        `${PREFIX_REDIS.SOCKET}:${cacheUser.id}`,
-        cacheUser.id,
-      );
-
       return true;
     }
 
@@ -58,8 +53,6 @@ export class SocketAuthGuard implements CanActivate {
 
     // Lưu vào cache để lần sau không phải verify lại
     await this.redisService.set(`token:${token}`, user, this.ttlCache);
-
-    await this.redisService.set(`${PREFIX_REDIS.SOCKET}:${user.id}`, user.id);
 
     client.data.user = user;
     return true;

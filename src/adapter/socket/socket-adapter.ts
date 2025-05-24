@@ -6,6 +6,7 @@ import { INestApplicationContext } from '@nestjs/common';
 import { RedisService } from 'src/redis/redis.service';
 import { IUser } from 'src/schemas/user.schema';
 import { SocketAuthGuard } from 'src/guards/socket-auth.guard';
+import { SERVICES } from 'src/utils';
 
 export interface AuthenticatedSocket extends Socket {
   user?: IUser;
@@ -21,17 +22,29 @@ export class SocketAdapter extends IoAdapter {
   constructor(private readonly app: INestApplicationContext) {
     super(app);
 
-    this.redisService = this.app.get(RedisService);
+    this.redisService = this.app.get(SERVICES.REDIS_SERVICE);
     this.socketAuthGuard = this.app.get(SocketAuthGuard);
   }
 
   async connectToRedis(): Promise<void> {
-    const pubClient = this.redisService.getPubClient();
-    const subClient = this.redisService.getSubClient();
+    try {
+      const pubClient = this.redisService.getPubClient();
+      const subClient = this.redisService.getSubClient();
 
-    await Promise.all([pubClient.connect(), subClient.connect()]);
+      // Check if clients are already connected
+      if (!pubClient.isOpen) {
+        await pubClient.connect();
+      }
 
-    this.adapterConstructor = createAdapter(pubClient, subClient);
+      if (!subClient.isOpen) {
+        await subClient.connect();
+      }
+
+      this.adapterConstructor = createAdapter(pubClient, subClient);
+    } catch (error) {
+      console.error('Error connecting to Redis:', error);
+      // Continue without Redis adapter if connection fails
+    }
   }
 
   createIOServer(port: number, options?: ServerOptions): any {
@@ -45,6 +58,11 @@ export class SocketAdapter extends IoAdapter {
       pingTimeout: 15000,
       connectTimeout: 45000,
     });
+
+    // Apply Redis adapter if available
+    if (this.adapterConstructor) {
+      server.adapter(this.adapterConstructor);
+    }
 
     server.use(async (socket: Socket, next) => {
       const isAuth = await this.socketAuthGuard.canActivate({
